@@ -1,0 +1,30 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:show_subjects_on_both_idr_and_omero_where_they_share_references_either_as_pmid_or_doi a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Show subjects on both IDR and OMERO where they share references either as PMID or DOI" ;
+    rdfs:comment "Add the subjects on both IDR and Uniprot based on https://github.com/Koetai/sparql-examples/issues/8\n\n---\n_Submitted via [sparql-desktop](https://koetai.github.io/sparql-desktop/)._"^^rdf:HTML ;
+    spex:federatesWith <https://sparql.uniprot.org/sparql> ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+PREFIX up: <http://purl.uniprot.org/core/>
+SELECT ?id ?idrSubject ?nCurated ?nMapped WHERE {
+  { SELECT DISTINCT ?id ?idrSubject WHERE {
+      ?e ome:key "PubMed ID" ; ome:value ?v .
+      ?ann ome:mapEntry ?e . ?idrSubject ome:hasAnnotation ?ann .
+      BIND(STRBEFORE(?v, " ") AS ?id)
+  } }
+  BIND(IRI(CONCAT("http://purl.uniprot.org/citations/", ?id)) AS ?cit)
+  SERVICE <https://sparql.uniprot.org/sparql> {
+     ?cit a ?ct .
+     OPTIONAL { SELECT ?cit (COUNT(DISTINCT ?pc) AS ?nCurated) WHERE { ?pc a up:Protein ; up:citation       ?cit } GROUP BY ?cit }
+     OPTIONAL { SELECT ?cit (COUNT(DISTINCT ?pm) AS ?nMapped)  WHERE { ?pm a up:Protein ; up:mappedCitation ?cit } GROUP BY ?cit }
+  }
+}
+ORDER BY DESC(?nMapped)""" ;
+    schema:keywords "ome" , "Protein" , "citation" , "mappedCitation" , "Uniprot" , "IDR" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
