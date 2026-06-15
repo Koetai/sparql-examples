@@ -1,0 +1,40 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+ex:idr_glycoprotein_images_full_viewer_screen_linked_to_glycosmos a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "IDR glycoprotein images (full viewer + screen) linked to GlyCosmos" ;
+    rdfs:comment "A federated query running on IDR (with SERVICE to RDF Portal/GlyCosmos) that finds IDR-imaged proteins which GlyCosmos records as glycoproteins, and for each returns the full-resolution IDR viewer URL (iviewer) of an image plus the URL of its containing IDR Screen, derived by walking the Image <- WellSample<- Well<- Plate<- Screen containment chain."^^rdf:HTML ;
+    sh:prefixes _:sparql_examples_prefixes ;
+    sh:select """PREFIX ome:     <https://ld.openmicroscopy.org/core/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX glycan:  <http://purl.jp/bio/12/glyco/glycan#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?acc ?gpLabel ?fullImage ?aggregateUrl WHERE {
+  {                                       # RDF Portal (GlyCosmos): IDR proteins that are glycoproteins
+    SELECT DISTINCT ?acc ?gpLabel WHERE {
+      { SELECT DISTINCT ?acc WHERE { ?e0 ome:key "UniProt ID" ; ome:value ?acc } }
+      BIND(IRI(CONCAT("http://glycosmos.org/glycoprotein/", ?acc)) AS ?gp)
+      SERVICE <https://rdfportal.org/primary/sparql> {
+        ?gp a glycan:Glycoprotein ; rdfs:label ?gpLabel .
+      }
+    }
+  }
+  ?e ome:key "UniProt ID" ; ome:value ?acc .
+  ?ann ome:mapEntry ?e .
+  ?image ome:hasAnnotation ?ann ; a ome:Image .
+  ?ws    dcterms:relation ?image .         # Image  ← WellSample
+  ?well  dcterms:hasPart  ?ws .            # WellSample ← Well
+  ?plate dcterms:hasPart  ?well .          # Well   ← Plate
+  ?screen dcterms:relation ?plate ; a ome:Screen .   # Plate ← Screen (the aggregate)
+  BIND(IRI(CONCAT("https://idr.openmicroscopy.org/iviewer/?images=",
+                  STRAFTER(STR(?image), "/Image/"))) AS ?fullImage)
+  BIND(IRI(CONCAT("https://idr.openmicroscopy.org/webclient/?show=screen-",
+                  STRAFTER(STR(?screen), "/Screen/"))) AS ?aggregateUrl)
+}
+LIMIT 25""" ;
+    schema:keywords "IDR" , "OMERO" , "Glycosmos" , "rdfportal.org" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
