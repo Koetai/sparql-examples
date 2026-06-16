@@ -3,19 +3,19 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix schema: <https://schema.org/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
 
 ex:mapping_from_pathology_identifiers_to_external_code_systems_including_ordo a sh:SPARQLExecutable,
         sh:SPARQLSelectExecutable ;
     rdfs:label "Mapping from Pathology Identifiers to external code systems, including ORDO" ;
     rdfs:comment "Mapping from Pathology Identifiers to external code systems, including ORDO"^^rdf:HTML ;
+    spex:federatesWith <https://rdfportal.org/bioportal/sparql> ;
     sh:select """PREFIX ome:      <https://ld.openmicroscopy.org/core/>
 PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
 PREFIX ncit:     <http://purl.obolibrary.org/obo/NCIT_>
 PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
 
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 SELECT DISTINCT ?value ?icdo ?ncit ?ncit_label ?umls ?system ?code
 WHERE {
 
@@ -49,5 +49,5 @@ WHERE {
     }
   }
 }""" ;
-    schema:keywords "IDR" , "OMERO" , "Code systems" ;
+    schema:keywords "example" ;
     schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
