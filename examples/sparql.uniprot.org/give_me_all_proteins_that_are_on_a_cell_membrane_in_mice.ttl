@@ -1,0 +1,31 @@
+@prefix ex: <https://sparql.uniprot.org/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:give_me_all_proteins_that_are_on_a_cell_membrane_in_mice a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Give me all proteins that are on a cell membrane in mice" ;
+    rdfs:comment "Give me all proteins that are on a cell membrane in mice"^^rdf:HTML ;
+    sh:select """PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX taxon: <http://purl.uniprot.org/taxonomy/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT DISTINCT ?protein ?proteinName ?locationLabel
+WHERE {
+  ?protein a up:Protein ;
+           up:organism taxon:10090 ;
+           up:annotation ?annotation .
+  ?annotation a up:Subcellular_Location_Annotation ;
+              up:locatedIn/up:cellularComponent ?location .
+  ?location skos:prefLabel ?locationLabel .
+  FILTER(CONTAINS(LCASE(STR(?locationLabel)), "cell membrane"))
+  OPTIONAL {
+    ?protein up:recommendedName/up:fullName ?proteinName .
+  }
+}
+LIMIT 25""" ;
+    schema:keywords "example" ;
+    schema:target <https://sparql.uniprot.org/> .
