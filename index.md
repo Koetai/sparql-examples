@@ -13,7 +13,10 @@ Contribute your own through the
 ORCID, write or paste a working query, and submit. Curators review the
 incoming issues and convert validated ones into the files listed below.
 
-## Examples
+## Examples by endpoint
+
+Each link goes to a per-endpoint page with all curated example queries for
+that target (auto-generated from the `.ttl` files by the build).
 
 {% assign all = site.static_files | where_exp: "f", "f.path contains '/examples/'" %}
 {% assign ttls = all | where_exp: "f", "f.extname == '.ttl'" %}
@@ -21,14 +24,9 @@ incoming issues and convert validated ones into the files listed below.
 
 {% if ttls.size == 0 %}
 *No examples merged yet — be the first contributor.*
-{% else %}
-{% for group in by_folder %}{% if group.name != "" %}
-### {{ group.name }}
-
-{% for file in group.items %}- [{{ file.name | remove: ".ttl" | replace: "_", " " }}]({{ file.path | relative_url }})
-{% endfor %}
-{% endif %}{% endfor %}
-{% endif %}
+{% else %}{% for group in by_folder %}{% if group.name != "" %}
+- [{{ group.name }}](./examples/{{ group.name }}/) — {{ group.items.size }} example{% if group.items.size != 1 %}s{% endif %}
+{% endif %}{% endfor %}{% endif %}
 
 ## Reference
 
