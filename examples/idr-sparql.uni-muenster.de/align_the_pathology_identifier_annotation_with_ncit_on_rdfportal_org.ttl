@@ -30,5 +30,5 @@ SELECT DISTINCT ?value ?icdo ?idr_pathology ?concept ?ncit_label WHERE {
              rdfs:label ?ncit_label .
   }
 }""" ;
-    schema:keywords "example" ;
+    schema:keywords "rdfportal.org" , "NCIt" ;
     schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
