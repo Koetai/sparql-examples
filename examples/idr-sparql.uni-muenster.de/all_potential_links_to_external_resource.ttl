@@ -1,0 +1,27 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:all_potential_links_to_external_resource a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "All potential links to external resource" ;
+    rdfs:comment "This query renders all potential identifiers that can be used to generate a federated query again IDR rdf"^^rdf:HTML ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+SELECT ?key WHERE {
+  { SELECT DISTINCT ?key WHERE { ?e ome:key ?key } }
+  FILTER( STRENDS(?key, " ID") || STRENDS(?key, " URL")
+       || CONTAINS(?key, "Identifier") || CONTAINS(?key, "Accession")
+       || CONTAINS(?key, "UniProt")  || CONTAINS(?key, "Entrez")
+       || CONTAINS(?key, "RefSeq")   || CONTAINS(?key, "Ensembl")
+       || CONTAINS(?key, "GenBank")  || CONTAINS(?key, "HGNC")
+       || CONTAINS(?key, "GeneID")   || CONTAINS(?key, "LocusLink")
+       || CONTAINS(?key, "EMPIAR")   || CONTAINS(?key, "BioStudies")
+       || CONTAINS(?key, "PubMed")   || CONTAINS(?key, "DOI")
+       || CONTAINS(?key, "Addgene")  || CONTAINS(?key, "GI Number") )
+}
+ORDER BY ?key""" ;
+    schema:keywords "example" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
