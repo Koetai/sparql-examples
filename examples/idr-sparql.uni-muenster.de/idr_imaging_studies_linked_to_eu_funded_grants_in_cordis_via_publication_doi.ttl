@@ -1,0 +1,36 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:idr_imaging_studies_linked_to_eu_funded_grants_in_cordis_via_publication_doi a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "IDR imaging studies linked to EU-funded grants in CORDIS (via publication DOI)" ;
+    rdfs:comment "Federates IDR (publication DOI) with CORDIS/EURIO to find the EU grant(s) that funded each imaging study."^^rdf:HTML ;
+    spex:federatesWith <https://cordis.europa.eu/datalab/sparql> ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+PREFIX eurio: <http://data.europa.eu/s66#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT ?idrUrl
+       (GROUP_CONCAT(DISTINCT ?doi;       separator=" ; ") AS ?dois)
+       (GROUP_CONCAT(DISTINCT ?grant;     separator=" ; ") AS ?grantNumbers)
+       (GROUP_CONCAT(DISTINCT ?cordisUrl; separator=" ; ") AS ?cordisProjects)
+WHERE {
+  ?e ome:key "Publication DOI" ; ome:value ?v .
+  ?ann ome:mapEntry ?e .
+  ?idrSubject ome:hasAnnotation ?ann .
+  BIND(STRBEFORE(?v, " ") AS ?doi)
+  BIND(STRDT(?doi, xsd:anyURI) AS ?doiTyped)
+  BIND(CONCAT("https://idr.openmicroscopy.org/webclient/?show=",
+              REPLACE(LCASE(STRAFTER(STR(?idrSubject), "openmicroscopy.org/")), "/", "-")) AS ?idrUrl)
+  SERVICE <https://cordis.europa.eu/datalab/sparql> {
+    ?result  a eurio:ProjectPublication ; eurio:doi ?doiTyped .
+    ?project eurio:hasResult ?result ; eurio:identifier ?grant .
+  }
+  BIND(CONCAT("https://cordis.europa.eu/project/id/", ?grant) AS ?cordisUrl)
+}
+GROUP BY ?idrUrl""" ;
+    schema:keywords "funding" , "cordis" , "idr" , "omero" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
