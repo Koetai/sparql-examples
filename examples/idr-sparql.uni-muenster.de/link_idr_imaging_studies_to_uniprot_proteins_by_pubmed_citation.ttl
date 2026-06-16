@@ -1,0 +1,31 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:link_idr_imaging_studies_to_uniprot_proteins_by_pubmed_citation a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Link IDR imaging studies to UniProt proteins by PubMed citation" ;
+    rdfs:comment "A federated query that links IDR imaging studies to UniProt proteins through their shared publication — for every IDR study annotated with a PubMed ID, it lists the UniProt proteins that cite (or are computationally mapped to) that paper."^^rdf:HTML ;
+    spex:federatesWith <https://sparql.uniprot.org/sparql> ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+PREFIX up: <http://purl.uniprot.org/core/>
+SELECT ?idrUrl
+       (GROUP_CONCAT(DISTINCT STR(?cit);     separator=" ; ") AS ?citations)
+       (GROUP_CONCAT(DISTINCT STR(?protein); separator=" ; ") AS ?proteins)
+WHERE {
+  ?e ome:key "PubMed ID" ; ome:value ?v .
+  ?ann ome:mapEntry ?e .
+  ?idrSubject ome:hasAnnotation ?ann .
+  BIND(CONCAT("https://idr.openmicroscopy.org/webclient/?show=",
+              REPLACE(LCASE(STRAFTER(STR(?idrSubject), "openmicroscopy.org/")), "/", "-")) AS ?idrUrl)
+  BIND(IRI(CONCAT("http://purl.uniprot.org/citations/", STRBEFORE(?v, " "))) AS ?cit)
+  SERVICE <https://sparql.uniprot.org/sparql> {
+    ?protein a up:Protein ; (up:citation|up:mappedCitation) ?cit .
+  }
+}
+GROUP BY ?idrUrl""" ;
+    schema:keywords "IDR" , "Uniprot" , "DOI" , "PMIDs" , "URL rendered" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
