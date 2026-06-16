@@ -1,0 +1,34 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:wikidata_bridged_idr_proteins_by_shared_subcellular_localization_with_idr_viewer_links a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Wikidata-bridged IDR proteins by shared subcellular localization (with IDR viewer links)" ;
+    rdfs:comment "A federated query, executed on QLever's Wikidata mirror (qlever.dev/wikidata) with SERVICE to IDR, that groups IDR-imaged proteins by a classifier IDR itself doesn't record — Wikidata subcellular localization (wdt:P681, joined via UniProt accession wdt:P352). Each localization shared by ≥2 IDR proteins is a link that exists only through Wikidata, and every protein in the group carries an explicit IDR iviewer URL."^^rdf:HTML ;
+    spex:federatesWith <http://idr-sparql.uni-muenster.de/qlever/sparql/> ;
+    sh:select """PREFIX ome:  <https://ld.openmicroscopy.org/core/>
+PREFIX wdt:  <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?localization (COUNT(DISTINCT ?acc) AS ?nIdrProteins)
+       (GROUP_CONCAT(DISTINCT CONCAT(?acc, " -> ", STR(?idrImage)); separator=" || ") AS ?idrProteinImages)
+WHERE {
+  SERVICE <http://idr-sparql.uni-muenster.de/qlever/sparql/> {   # IDR: one viewer link per protein
+    SELECT ?acc (SAMPLE(?iviewer) AS ?idrImage) WHERE {
+      ?e ome:key "UniProt ID" ; ome:value ?acc .
+      ?ann ome:mapEntry ?e . ?img ome:hasAnnotation ?ann ; a ome:Image .
+      BIND(IRI(CONCAT("https://idr.openmicroscopy.org/iviewer/?images=",
+                      STRAFTER(STR(?img), "/Image/"))) AS ?iviewer)
+    } GROUP BY ?acc
+  }
+  ?item wdt:P352 ?acc ; wdt:P681 ?loc .                          # Wikidata: the bridging classifier
+  ?loc rdfs:label ?localization . FILTER(LANG(?localization)="en")
+}
+GROUP BY ?localization
+HAVING (COUNT(DISTINCT ?acc) >= 2)
+ORDER BY DESC(?nIdrProteins)""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/wikidata> .
