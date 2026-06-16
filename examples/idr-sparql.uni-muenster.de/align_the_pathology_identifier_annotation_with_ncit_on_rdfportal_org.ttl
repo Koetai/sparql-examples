@@ -1,0 +1,34 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:align_the_pathology_identifier_annotation_with_ncit_on_rdfportal_org a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Align the pathology identifier annotation with NCIT on RDFPortal.org" ;
+    rdfs:comment "This query aligns the pathology identifier with the NCIt. ICDO is hard to align with due to the lack of a SPARQL endpoint that hosts the thesaurus. However, NCIt has parts of it included, so if we can reconcile the pathology identifier with NCIt terms, we can venture out to other linked resources."^^rdf:HTML ;
+    spex:federatesWith <https://rdfportal.org/bioportal/sparql> ;
+    sh:select """PREFIX ome:  <https://ld.openmicroscopy.org/core/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ncit: <http://purl.obolibrary.org/obo/NCIT_>
+
+SELECT DISTINCT ?value ?icdo ?idr_pathology ?concept ?ncit_label WHERE {
+  # Co-located mapEntries on the same annotation node
+  ?s ?p  ?m  . ?m  ome:key "Pathology Identifier" ; ome:value ?value .
+  ?s ?p2 ?m2 . ?m2 ome:key "Pathology"            ; ome:value ?idr_pathology .
+
+  # M-81403  →  81403  →  8140/3
+  BIND(REPLACE(?value, "^M-", "") AS ?raw)
+  BIND(IF(STRLEN(?raw) = 5,
+          CONCAT(SUBSTR(?raw, 1, 4), "/", SUBSTR(?raw, 5, 1)),
+          ?raw) AS ?icdo)
+
+  SERVICE <https://rdfportal.org/bioportal/sparql> {
+    ?concept ncit:P334  ?icdo ;
+             rdfs:label ?ncit_label .
+  }
+}""" ;
+    schema:keywords "example" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
