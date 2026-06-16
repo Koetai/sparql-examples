@@ -1,0 +1,35 @@
+@prefix ex: <https://www.bgee.org/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:bgee_gene_idr_microscopy_images a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Bgee gene → IDR microscopy images" ;
+    rdfs:comment "Bgee-driven federation: for given UniProt-identified genes, fetch renderable IDR image URLs via SERVICE to the IDR endpoint."^^rdf:HTML ;
+    spex:federatesWith <http://idr-sparql.uni-muenster.de/qlever/sparql/> ;
+    sh:select """PREFIX orth:  <http://purl.org/net/orth#>
+PREFIX lscr:  <http://purl.org/lscr#>
+PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ome:   <https://ld.openmicroscopy.org/core/>
+PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+SELECT ?geneName ?acc ?thumbnail ?page WHERE {
+  VALUES ?protein {
+    <http://purl.uniprot.org/uniprot/P02545>   # LMNA
+    <http://purl.uniprot.org/uniprot/P27797>   # CALR
+  }
+  ?gene a orth:Gene ; lscr:xrefUniprot ?protein ; rdfs:label ?geneName .
+  BIND(STRAFTER(STR(?protein), "http://purl.uniprot.org/uniprot/") AS ?acc)
+  SERVICE <http://idr-sparql.uni-muenster.de/qlever/sparql/> {
+    ?e ome:key "UniProt ID" ; ome:value ?acc .
+    ?ann ome:mapEntry ?e .
+    ?img ome:hasAnnotation ?ann ; omekg:ome_details ?page .
+  }
+  BIND(IRI(CONCAT("https://idr.openmicroscopy.org/webgateway/render_thumbnail/",
+                  STRAFTER(STR(?img), "/Image/"), "/")) AS ?thumbnail)
+}
+LIMIT 25""" ;
+    schema:keywords "BGEE" , "IDR" , "Federation" ;
+    schema:target <https://www.bgee.org/sparql> .
