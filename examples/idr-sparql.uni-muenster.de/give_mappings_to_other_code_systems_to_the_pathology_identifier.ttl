@@ -1,0 +1,53 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:give_mappings_to_other_code_systems_to_the_pathology_identifier a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Give mappings to other code systems to the pathology identifier" ;
+    rdfs:comment "With NCIt as a bridge and MONDO as a subsequent bridge, this query suggests mapping to other code systems"^^rdf:HTML ;
+    spex:federatesWith <https://rdfportal.org/bioportal/sparql> ;
+    sh:select """PREFIX ome:      <https://ld.openmicroscopy.org/core/>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+PREFIX ncit:     <http://purl.obolibrary.org/obo/NCIT_>
+PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
+
+SELECT DISTINCT ?value ?icdo ?ncit ?ncit_label ?umls ?system ?code
+WHERE {
+
+  # ── IDR side: collapse to the 70 distinct codes BEFORE federating ──
+  {
+    SELECT DISTINCT ?value WHERE {
+      ?m ome:key "Pathology Identifier" ;
+         ome:value ?value .
+    }
+  }
+
+  BIND(REPLACE(?value, "^M-", "") AS ?raw)
+  BIND(IF(STRLEN(?raw) = 5,
+          CONCAT(SUBSTR(?raw, 1, 4), "/", SUBSTR(?raw, 5, 1)),
+          ?raw) AS ?icdo)
+
+  # ── Federation: one SERVICE round-trip for all 70 codes ──
+  SERVICE <https://rdfportal.org/bioportal/sparql> {
+    ?ncit ncit:P334 ?icdo ;
+          rdfs:label ?ncit_label .
+    OPTIONAL { ?ncit ncit:P207 ?umls }
+
+    OPTIONAL {
+      ?bridge skos:exactMatch ?ncit ;
+              oboInOwl:hasDbXref ?xref .
+      BIND(REPLACE(STR(?xref), ":.*",    "") AS ?system)
+      BIND(REPLACE(STR(?xref), "^[^:]+:", "") AS ?code)
+      FILTER(?system IN
+        ("DOID","MONDO","MESH","SCTID","UMLS","Orphanet",
+         "OMIM","EFO","HP","MEDGEN","ICDO","MedDRA","GARD"))
+    }
+  }
+}""" ;
+    schema:keywords "skos" , "ncit" , "oboInOwl" , "NCIT_P334" , "NCIT_P207" , "hasDbXref" , "exactMatch" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
