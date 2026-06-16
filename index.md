@@ -20,9 +20,22 @@ that target (auto-generated from the `.ttl` files by the build).
 
 {% assign all = site.static_files | where_exp: "f", "f.path contains '/examples/'" %}
 {% assign ttls = all | where_exp: "f", "f.extname == '.ttl'" %}
-{% assign by_folder = ttls | group_by_exp: "f", "f.path | split: '/' | slice: 2,1 | join: ''" | sort: "name" %}
 
-{% if ttls.size == 0 %}
+{% comment %}
+Keep only .ttl files that live in a subfolder under examples/ — this skips
+the top-level prefixes.ttl and sparql-examples-ontology.ttl, which aren't
+endpoint folders. A file is "in a subfolder" iff the path tail after
+"/examples/" contains another '/'.
+{% endcomment %}
+{% assign in_folders = "" | split: "" %}
+{% for f in ttls %}
+  {% assign tail = f.path | split: '/examples/' | last %}
+  {% if tail contains '/' %}{% assign in_folders = in_folders | push: f %}{% endif %}
+{% endfor %}
+
+{% assign by_folder = in_folders | group_by_exp: "f", "f.path | split: '/examples/' | last | split: '/' | first" | sort: "name" %}
+
+{% if in_folders.size == 0 %}
 *No examples merged yet — be the first contributor.*
 {% else %}{% for group in by_folder %}{% if group.name != "" %}
 - [{{ group.name }}](./examples/{{ group.name }}/) — {{ group.items.size }} example{% if group.items.size != 1 %}s{% endif %}
