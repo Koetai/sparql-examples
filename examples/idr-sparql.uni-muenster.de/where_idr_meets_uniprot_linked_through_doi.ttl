@@ -1,0 +1,37 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:where_idr_meets_uniprot_linked_through_doi a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Where IDR meets Uniprot linked through DOI" ;
+    rdfs:comment "This query shouw which URIs in IDR and which URIs in Uniprot are linked through a DOI or Pubmed"^^rdf:HTML ;
+    spex:federatesWith <https://sparql.uniprot.org/sparql> ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT DISTINCT ?type ?id WHERE {
+  {
+    { SELECT DISTINCT ?id WHERE {
+        ?e ome:key "PubMed ID" ; ome:value ?v .
+        BIND(STRBEFORE(?v, " ") AS ?id)
+    } }
+    BIND("PMID" AS ?type)
+    BIND(IRI(CONCAT("http://purl.uniprot.org/citations/", ?id)) AS ?cit)
+    SERVICE <https://sparql.uniprot.org/sparql> { ?cit a ?t }
+  } UNION {
+    { SELECT DISTINCT ?id WHERE {
+        ?e2 ome:key "Publication DOI" ; ome:value ?v2 .
+        BIND(STRBEFORE(?v2, " ") AS ?id)
+    } }
+    BIND("DOI" AS ?type)
+    BIND(CONCAT("doi:", ?id) AS ?doiLit)
+    SERVICE <https://sparql.uniprot.org/sparql> { ?cit2 dcterms:identifier ?doiLit }
+  }
+}
+ORDER BY ?type ?id""" ;
+    schema:keywords "IDR" , "Uniprot" , "DOI" , "PMIDs" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
