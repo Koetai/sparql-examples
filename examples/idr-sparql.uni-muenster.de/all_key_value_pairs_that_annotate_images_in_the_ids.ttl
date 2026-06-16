@@ -1,0 +1,18 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:all_key_value_pairs_that_annotate_images_in_the_ids a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "All key value pairs that annotate images in the IDS" ;
+    rdfs:comment "All key value pairs that annotate images in the IDS"^^rdf:HTML ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+SELECT DISTINCT ?key WHERE {
+  ?mapEntry ome:key ?key .
+}
+# LIMIT 25""" ;
+    schema:keywords "example" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
