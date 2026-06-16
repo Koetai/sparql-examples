@@ -1,0 +1,28 @@
+@prefix ex: <https://query.wikidata.org/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:translations_of_the_disease_ontology_term_doid_399_tuberculosis a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Translations of the Disease Ontology term DOID:399 (Tuberculosis)" ;
+    rdfs:comment "Give translations of the Disease Ontology term DOID:399. The English term needs to exist, which it is, because the Disease Ontology is an ontology in the English language. It will return the translations from the term existing as Wikidata label, based on the language tag"^^rdf:HTML ;
+    sh:select """PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+
+SELECT ?English ?language ?label WHERE {
+  ?disease wdt:P699 "DOID:399";
+             rdfs:label ?English;
+             rdfs:label ?label .
+  BIND(LANG(?label) as ?languageCode)
+  ?wdLanguage wdt:P424 ?languageCode;
+              rdfs:label ?language .
+    FILTER EXISTS {?wdLanguage wdt:P31?/wdt:P279+ wd:Q17376908}
+  FILTER (LANG(?English)="en")
+  FILTER (LANG(?language)="en")
+} ORDER BY ?language""" ;
+    schema:keywords "wikidata" , "tuberculosis" , "translation" ;
+    schema:target <https://query.wikidata.org/sparql> , <https://qlever.dev/api/wikidata> .
