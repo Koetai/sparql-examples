@@ -1,0 +1,37 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:idr_imaged_proteins_expressed_in_a_given_tissue_bgee_with_linked_images a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "IDR-imaged proteins expressed in a given tissue (Bgee), with linked images" ;
+    rdfs:comment "A federated query joining IDR's per-image UniProt ID annotations to Bgee gene-expression data: it returns each IDR-studied protein whose gene Bgee reports as expressed in a chosen anatomical entity (here brain, UBERON:0000955), together with the number of IDR images depicting that protein and a browsable example image URL."^^rdf:HTML ;
+    spex:federatesWith <https://www.bgee.org/sparql/> ;
+    sh:select """PREFIX ome:   <https://ld.openmicroscopy.org/core/>
+PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+PREFIX orth:  <http://purl.org/net/orth#>
+PREFIX lscr:  <http://purl.org/lscr#>
+PREFIX genex: <http://purl.org/genex#>
+PREFIX obo:   <http://purl.obolibrary.org/obo/>
+SELECT ?acc (SAMPLE(?imgUrl) AS ?exampleIdrImage) (COUNT(DISTINCT ?img) AS ?nIdrImages) WHERE {
+  {
+    SELECT DISTINCT ?acc ?protein WHERE {
+      ?e0 ome:key "UniProt ID" ; ome:value ?acc .
+      BIND(IRI(CONCAT("http://purl.uniprot.org/uniprot/", ?acc)) AS ?protein)
+      SERVICE <https://www.bgee.org/sparql/> {
+        ?gene a orth:Gene ; lscr:xrefUniprot ?protein ; genex:isExpressedIn ?cond .
+        ?cond genex:hasAnatomicalEntity obo:UBERON_0000955 .   # brain — swap for any UBERON/CL term
+      }
+    }
+  }
+  ?e ome:key "UniProt ID" ; ome:value ?acc .
+  ?ann ome:mapEntry ?e .
+  ?img ome:hasAnnotation ?ann ; omekg:ome_details ?imgUrl .
+}
+GROUP BY ?acc
+ORDER BY DESC(?nIdrImages)""" ;
+    schema:keywords "BGEE" , "Uniprot" , "IDR" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
