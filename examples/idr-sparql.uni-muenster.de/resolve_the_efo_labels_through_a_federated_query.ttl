@@ -1,0 +1,26 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:resolve_the_efo_labels_through_a_federated_query a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Resolve the EFO labels through a federated query" ;
+    rdfs:comment "IDR has annotations using the EFO. This query fetches their label from a remote SPARQL endpoint"^^rdf:HTML ;
+    spex:federatesWith <https://sparql.hegroup.org/sparql/> ;
+    sh:select """PREFIX ome:  <https://ld.openmicroscopy.org/core/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX efo:  <http://www.ebi.ac.uk/efo/>
+
+SELECT DISTINCT ?value ?term ?label WHERE {
+  ?mapEntry ome:key "EFO term" ;
+            ome:value ?value .
+  BIND(IRI(CONCAT(STR(efo:), ?value)) AS ?term)
+  SERVICE <https://sparql.hegroup.org/sparql/> {
+    ?term rdfs:label ?label .
+  }
+}""" ;
+    schema:keywords "example" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
