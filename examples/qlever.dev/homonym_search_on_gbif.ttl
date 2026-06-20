@@ -1,0 +1,29 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:homonym_search_on_gbif a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Homonym search on GBIF" ;
+    rdfs:comment "a SPARQL query against the GBIF backbone RDF that finds true taxonomic homonyms: distinct taxa that share the same name but sit on different branches of the tree."^^rdf:HTML ;
+    sh:select """PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
+PREFIX gbif:   <https://rs.gbif.org/terms/>
+PREFIX rank:   <https://rs.gbif.org/terms/rank/>
+PREFIX status: <https://rs.gbif.org/terms/status/>
+
+SELECT ?pref ?rank ?a ?rootA ?b ?rootB WHERE {
+  ?a skos:prefLabel ?pref ; gbif:rank ?rank ;
+     gbif:taxonomicStatus status:accepted ; skos:broader+ ?ra .
+  ?b skos:prefLabel ?pref ; gbif:rank ?rank ;          # same rank on both sides
+     gbif:taxonomicStatus status:accepted ; skos:broader+ ?rb .
+  ?ra gbif:rank rank:kingdom ; skos:prefLabel ?rootA .
+  ?rb gbif:rank rank:kingdom ; skos:prefLabel ?rootB .
+  FILTER(STR(?a) < STR(?b))
+  FILTER(?rootA != ?rootB)
+  FILTER(?rootA != "incertae sedis" && ?rootB != "incertae sedis")
+}""" ;
+    schema:keywords "gbif" , "homonym" ;
+    schema:target <https://qlever.dev/api/gbif> .
