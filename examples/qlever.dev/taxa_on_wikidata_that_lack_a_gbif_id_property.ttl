@@ -1,0 +1,32 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:taxa_on_wikidata_that_lack_a_gbif_id_property a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Taxa on wikidata that lack a GBIF ID property" ;
+    rdfs:comment "This query matches taxa on Wikidata that lack a property linking to GBIF"^^rdf:HTML ;
+    spex:federatesWith <https://qlever.dev/api/wikidata> ;
+    sh:select """PREFIX species: <https://www.gbif.org/species/>
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+PREFIX gbif:    <https://rs.gbif.org/terms/>
+PREFIX rank:    <https://rs.gbif.org/terms/rank/>
+PREFIX status:  <https://rs.gbif.org/terms/status/>
+PREFIX wdt:     <http://www.wikidata.org/prop/direct/>
+
+SELECT ?wdItem ?pref ?sp ?key WHERE {
+  ?sp skos:broader+ species:797 ;          # GBIF: within Lepidoptera
+      gbif:rank rank:species ;
+      gbif:taxonomicStatus status:accepted ;
+      skos:prefLabel ?pref .               # ← the prefLabel exists on the GBIF side
+  BIND(REPLACE(STR(?sp), "^.*/species/", "") AS ?key)
+  SERVICE <https://qlever.dev/api/wikidata> {
+    ?wdItem wdt:P225 ?pref .                # a Wikidata taxon with that same name...
+    FILTER NOT EXISTS { ?wdItem wdt:P846 [] }   # ...but no GBIF ID
+  }
+}""" ;
+    schema:keywords "species" , "gbif" , "wikidata" , "gbif" , "federated query" ;
+    schema:target <https://qlever.dev/api/gbif> .
