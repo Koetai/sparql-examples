@@ -1,0 +1,32 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:gbif_backbone_taxa_not_covered_on_wikidata a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "GBIF backbone taxa not covered on Wikidata" ;
+    rdfs:comment "This query checks which GBIF species id's are not covered on wikidata by alliging on the wikidata property for GBIF"^^rdf:HTML ;
+    spex:federatesWith <https://qlever.dev/api/wikidata> ;
+    sh:select """PREFIX species: <https://www.gbif.org/species/>
+PREFIX dwc:     <http://rs.tdwg.org/dwc/terms/>
+PREFIX gbif:    <https://rs.gbif.org/terms/>
+PREFIX rank:    <https://rs.gbif.org/terms/rank/>
+PREFIX status:  <https://rs.gbif.org/terms/status/>
+PREFIX wdt:     <http://www.wikidata.org/prop/direct/>
+
+SELECT ?sp ?key ?name WHERE {
+  ?sp gbif:rank rank:species ;
+      gbif:taxonomicStatus status:accepted ;
+      dwc:scientificName ?name .
+  BIND(REPLACE(STR(?sp), "^.*/species/", "") AS ?key)
+  MINUS {
+    SERVICE <https://qlever.dev/api/wikidata> {
+      ?wd wdt:P846 ?key .
+    }
+  }
+}""" ;
+    schema:keywords "P846" , "taxonomicStatus wikidata" , "gbif" ;
+    schema:target <https://qlever.dev/api/gbif> .
