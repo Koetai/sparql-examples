@@ -1,0 +1,34 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:all_accepted_lepidoptera_species_on_gbif_with_no_p846_backlink_on_wikidata a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "all accepted Lepidoptera species on GBIF with no P846 backlink on Wikidata" ;
+    rdfs:comment "This queries identifies all (child) taxa of lepidoptera with no GBIF property link on wikidata. The taxon can be covered on Wikidata and simply lack that link."^^rdf:HTML ;
+    spex:federatesWith <https://qlever.dev/api/wikidata> ;
+    sh:select """PREFIX species: <https://www.gbif.org/species/>
+PREFIX dwc:     <http://rs.tdwg.org/dwc/terms/>
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+PREFIX gbif:    <https://rs.gbif.org/terms/>
+PREFIX rank:    <https://rs.gbif.org/terms/rank/>
+PREFIX status:  <https://rs.gbif.org/terms/status/>
+PREFIX wdt:     <http://www.wikidata.org/prop/direct/>
+
+SELECT ?sp ?key ?name WHERE {
+  ?sp skos:broader+ species:797 ;          # order Lepidoptera
+      gbif:rank rank:species ;
+      gbif:taxonomicStatus status:accepted ;
+      dwc:scientificName ?name .
+  BIND(REPLACE(STR(?sp), "^.*/species/", "") AS ?key)
+  MINUS {
+    SERVICE <https://qlever.dev/api/wikidata> {
+      ?wd wdt:P846 ?key .
+    }
+  }
+}""" ;
+    schema:keywords "gbif" , "species" , "wikidata" , "federated query" ;
+    schema:target <https://qlever.dev/api/gbif> .
