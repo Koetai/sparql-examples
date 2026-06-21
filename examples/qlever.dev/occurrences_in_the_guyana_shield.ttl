@@ -1,0 +1,33 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:occurrences_in_the_guyana_shield a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Occurrences in the guyana shield" ;
+    rdfs:comment "Most observations are country bound, yet regions exist that cross borders and sometimes only partly covers a country. The guyana shield is such a region. It covers 6 countries, of which 3 partly and 3 completely. These query combines the two sections"^^rdf:HTML ;
+    sh:select """PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>
+PREFIX dwciri: <http://rs.tdwg.org/dwc/iri/>
+PREFIX wdt:    <http://www.wikidata.org/prop/direct/>
+PREFIX gbif:   <https://rs.gbif.org/terms/>
+
+SELECT ?occ ?species (REPLACE(STR(?rank), "^.*/", "") AS ?rankLabel) ?geometry WHERE {
+  ?occ dwciri:toTaxon ?t ;
+       dwc:decimalLatitude  ?lat ;
+       dwc:decimalLongitude ?lon ;
+       dwc:countryCode ?cc ;
+       wdt:P625 ?geometry .
+  ?t rdfs:label ?species ;
+     gbif:rank ?rank ;
+     gbif:taxonomicStatus ?status .
+  FILTER(?cc IN ("GY","SR","GF","VE","CO","BR"))
+  FILTER(?lat >= -2 && ?lat <= 9 && ?lon >= -73 && ?lon <= -50)
+  FILTER(STRENDS(LCASE(STR(?rank)),   "/species"))
+  FILTER(STRENDS(LCASE(STR(?status)), "/accepted"))   # accepted taxa only
+}""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
