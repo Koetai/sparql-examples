@@ -1,0 +1,36 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:collection_specimens_linked_to_same_species_sequences_gbif_uniprot a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Collection specimens linked to same-species sequences (GBIF → UniProt)" ;
+    rdfs:comment "Federated query connecting specimens in a natural-history collection (GBIF, institution code BR) to sequence data for the same species in UniProt. It reconstructs each specimen's canonical binomial from atomised Darwin Core fields (genericName + specificEpithet, since rdfs:label carries authorship) and matches it to UniProt's scientificName via a SERVICE call, returning the UniProt/NCBI taxon ID, a protein count, and the protein IRIs.\n\nThe link is taxon-level, not specimen-level: it shows that a species in the collection has molecular data in UniProt — not that any sequence was derived from these particular specimens. Establishing that true voucher link (specimen ↔ sequence) requires matching the Darwin Core triplet (institutionCode:catalogNumber) against a sequence record's specimen_voucher field, which lives in ENA/INSDC and is not part of this federation. This query therefore answers a scoping question: which collection taxa already have molecular data, and how much? — quantifying both the opportunity and the backlog."^^rdf:HTML ;
+    spex:federatesWith <https://qlever.cs.uni-freiburg.de/api/uniprot> ;
+    sh:select """PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>
+PREFIX dwciri: <http://rs.tdwg.org/dwc/iri/>
+PREFIX up:     <http://purl.uniprot.org/core/>
+
+SELECT ?species ?taxon
+       (COUNT(DISTINCT ?protein) AS ?protein_count)
+       (GROUP_CONCAT(STR(?protein); SEPARATOR=",") AS ?proteins)   
+WHERE {
+  {
+    SELECT DISTINCT ?species WHERE {
+      ?occ dwc:institutionCode "BR" ; dwciri:toTaxon ?t .
+      ?t dwc:genericName ?genus ; dwc:specificEpithet ?epithet .
+      BIND(CONCAT(STR(?genus), " ", STR(?epithet)) AS ?species)
+    }
+  }
+  SERVICE <https://qlever.cs.uni-freiburg.de/api/uniprot> {
+    ?taxon up:scientificName ?species .
+    OPTIONAL { ?protein up:organism ?taxon }
+  }
+}
+GROUP BY ?species ?taxon""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
