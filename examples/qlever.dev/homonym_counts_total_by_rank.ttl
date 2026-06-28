@@ -1,0 +1,24 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:homonym_counts_total_by_rank a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Homonym counts (total + by rank)" ;
+    rdfs:comment "PREFIX gbif:   <https://rs.gbif.org/terms/>\nPREFIX status: <https://rs.gbif.org/terms/status/>\nPREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>\nSELECT (COUNT(*) AS ?pairs) (COUNT(DISTINCT ?name) AS ?names) WHERE {\n  ?a rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kA .\n  ?b rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kB .\n  FILTER(STR(?a) < STR(?b)) FILTER(STR(?kA) != STR(?kB))\n  FILTER(STR(?kA) != \"incertae sedis\" && STR(?kB) != \"incertae sedis\")\n}"^^rdf:HTML ;
+    sh:select """PREFIX gbif:   <https://rs.gbif.org/terms/>
+PREFIX status: <https://rs.gbif.org/terms/status/>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>
+SELECT (COUNT(*) AS ?pairs) (COUNT(DISTINCT ?name) AS ?names) WHERE {
+  ?a rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kA .
+  ?b rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kB .
+  FILTER(STR(?a) < STR(?b)) FILTER(STR(?kA) != STR(?kB))
+  FILTER(STR(?kA) != "incertae sedis" && STR(?kB) != "incertae sedis")
+}
+# by rank: replace projection with  SELECT ?rank (COUNT(*) AS ?n) … GROUP BY ?rank ORDER BY DESC(?n)""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
