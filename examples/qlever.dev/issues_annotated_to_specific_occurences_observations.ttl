@@ -1,0 +1,17 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:issues_annotated_to_specific_occurences_observations a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Issues annotated to specific occurences/observations" ;
+    rdfs:comment "In GBIF issues remains regarding occurrences, this query lists their times and frequencey"^^rdf:HTML ;
+    sh:select """PREFIX dwc: <http://rs.tdwg.org/dwc/terms/>
+SELECT ?issue (COUNT(*) AS ?n) WHERE {
+  ?occ dwc:issue ?issue .
+} GROUP BY ?issue ORDER BY DESC(?n)""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
