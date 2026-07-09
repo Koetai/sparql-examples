@@ -1,0 +1,31 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:same_as_9_but_now_for_doi a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Same as #9 but now for DOI" ;
+    rdfs:comment "Same as #9 but not for DOI"^^rdf:HTML ;
+    spex:federatesWith <https://sparql.uniprot.org/sparql> ;
+    sh:select """PREFIX ome: <https://ld.openmicroscopy.org/core/>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?id ?idrSubject ?nCurated ?nMapped WHERE {
+  { SELECT DISTINCT ?id ?idrSubject WHERE {
+      ?e ome:key "Publication DOI" ; ome:value ?v .
+      ?ann ome:mapEntry ?e . ?idrSubject ome:hasAnnotation ?ann .
+      BIND(STRBEFORE(?v, " ") AS ?id)
+  } }
+  BIND(CONCAT("doi:", ?id) AS ?doiLit)
+  SERVICE <https://sparql.uniprot.org/sparql> {
+     ?cit dcterms:identifier ?doiLit .
+     OPTIONAL { SELECT ?cit (COUNT(DISTINCT ?pc) AS ?nCurated) WHERE { ?pc a up:Protein ; up:citation       ?cit } GROUP BY ?cit }
+     OPTIONAL { SELECT ?cit (COUNT(DISTINCT ?pm) AS ?nMapped)  WHERE { ?pm a up:Protein ; up:mappedCitation ?cit } GROUP BY ?cit }
+  }
+}
+ORDER BY DESC(?nMapped)""" ;
+    schema:keywords "DOI" , "IDR" , "UNIPROT" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
