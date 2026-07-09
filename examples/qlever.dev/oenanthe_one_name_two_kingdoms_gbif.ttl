@@ -1,0 +1,26 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:oenanthe_one_name_two_kingdoms_gbif a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Oenanthe, one name, two kingdoms, gbif" ;
+    rdfs:comment "Oenanthe, one name, two kingdoms, gbif"^^rdf:HTML ;
+    sh:select """PREFIX gbif:   <https://rs.gbif.org/terms/>
+PREFIX rank:   <https://rs.gbif.org/terms/rank/>
+PREFIX status: <https://rs.gbif.org/terms/status/>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>
+SELECT ?scientificName ?kingdom ?phylum ?taxon WHERE {
+  ?taxon rdfs:label "Oenanthe" ;
+         gbif:rank rank:genus ;
+         gbif:taxonomicStatus status:accepted ;
+         dwc:scientificName ?scientificName ;
+         dwc:kingdom ?kingdom ;
+         dwc:phylum  ?phylum .
+}""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
