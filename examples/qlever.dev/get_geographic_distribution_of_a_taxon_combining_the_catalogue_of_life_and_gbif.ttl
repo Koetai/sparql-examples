@@ -1,0 +1,29 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:get_geographic_distribution_of_a_taxon_combining_the_catalogue_of_life_and_gbif a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Get geographic distribution of a taxon combining the Catalogue of Life and GBIF" ;
+    rdfs:comment "Given a species with a Catalogue of Life identifier, the query:\n1.  Converts the Catalogue of Life identifier (https://www.catalogueoflife.org/data/taxon/D59MS) to a legacy GBIF species id with a federated query using the https://iphylo.org/col/query endpoint\n2. Then queries the GBIF endpoint to with the legacy GBIF identfiier to retrieve point localities for the taxon"^^rdf:HTML ;
+    spex:federatesWith <https://iphylo.org/col/query> ;
+    sh:select """PREFIX s: <https://schema.org/>
+PREFIX dwciri: <http://rs.tdwg.org/dwc/iri/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+
+SELECT * WHERE {
+	VALUES ?col { <https://www.catalogueoflife.org/data/taxon/D59MS> }
+	
+  SERVICE <https://iphylo.org/col/query> {
+    ?gbif s:sameAs ?col .
+   }
+	
+?occurrence dwciri:toTaxon ?gbif .
+?occurrence wdt:P625 ?pt .
+}
+LIMIT 100""" ;
+    schema:keywords "runtime:308ms" ;
+    schema:target <https://qlever.dev/api/gbif> .
