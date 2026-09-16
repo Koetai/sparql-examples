@@ -1,0 +1,23 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:distribution_of_members_of_the_genus_smicridea a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Distribution of members of the genus Smicridea" ;
+    rdfs:comment "Simple test of making a distribution map (using my own SPARQL client). Note that several records of this caddis fly occur in the middle of the Atlantic :O"^^rdf:HTML ;
+    sh:select """PREFIX dwc: <http://rs.tdwg.org/dwc/terms/>
+PREFIX dwciri: <http://rs.tdwg.org/dwc/iri/>
+SELECT * WHERE {
+?taxon dwc:genericName "Smicridea" .
+?taxon  dwc:scientificName ?scientificName .
+?occurrence dwciri:toTaxon ?taxon . 
+?occurrence dwciri:inDescribedPlace	<https://www.example.org/namedLocation/BR> .
+?occurrence dwc:decimalLatitude ?latitude .
+?occurrence dwc:decimalLongitude ?longitude .
+}""" ;
+    schema:keywords "runtime:251ms" ;
+    schema:target <https://qlever.dev/api/gbif> .
