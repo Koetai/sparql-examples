@@ -1,0 +1,41 @@
+@prefix ex: <http://idr-sparql.uni-muenster.de/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:idr_imaged_proteins_grouped_by_their_uniprot_curated_subcellular_location a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "IDR-imaged proteins grouped by their UniProt-curated subcellular location" ;
+    rdfs:comment "A federated query that maps the subcellular-compartment coverage of the IDR image collection onto UniProt. For every protein annotated with a UniProt ID in IDR it joins to UniProt's curated Subcellular Location Annotation and groups the results by cellular component, returning for each location the number of distinct imaged proteins, the number of IDR images, and an example image URL."^^rdf:HTML ;
+    spex:federatesWith <https://sparql.uniprot.org/sparql> ;
+    sh:select """PREFIX ome:   <https://ld.openmicroscopy.org/core/>
+PREFIX omekg: <https://ld.openmicroscopy.org/omekg#>
+PREFIX up:    <http://purl.uniprot.org/core/>
+PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>
+SELECT ?location ?locationLabel
+       (COUNT(DISTINCT ?acc) AS ?nProteins)
+       (COUNT(DISTINCT ?img) AS ?nImages)
+       (SAMPLE(?imgUrl) AS ?exampleImage)
+WHERE {
+  {
+    SELECT DISTINCT ?acc ?location ?locationLabel WHERE {
+      { SELECT DISTINCT ?acc WHERE { ?e0 ome:key "UniProt ID" ; ome:value ?acc } }
+      BIND(IRI(CONCAT("http://purl.uniprot.org/uniprot/", ?acc)) AS ?protein)
+      SERVICE <https://sparql.uniprot.org/sparql> {
+        ?protein up:annotation ?scl .
+        ?scl a up:Subcellular_Location_Annotation ; up:locatedIn ?loc .
+        ?loc up:cellularComponent ?location .
+        ?location skos:prefLabel ?locationLabel .
+      }
+    }
+  }
+  ?e ome:key "UniProt ID" ; ome:value ?acc .
+  ?ann ome:mapEntry ?e .
+  ?img ome:hasAnnotation ?ann ; omekg:ome_details ?imgUrl .
+}
+GROUP BY ?location ?locationLabel
+ORDER BY DESC(?nImages)""" ;
+    schema:keywords "IDR" , "UniProt" , "subcellular location" , "cellularComponent" , "Protein" , "microscopy" ;
+    schema:target <http://idr-sparql.uni-muenster.de/qlever/sparql/> .
