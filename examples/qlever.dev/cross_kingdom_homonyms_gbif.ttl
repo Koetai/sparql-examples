@@ -1,0 +1,24 @@
+@prefix ex: <https://qlever.dev/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:cross_kingdom_homonyms_gbif a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Cross-kingdom homonyms, gbif" ;
+    rdfs:comment "In taxanomy multiple taxa exist with the same name. This query lists them"^^rdf:HTML ;
+    sh:select """PREFIX gbif:   <https://rs.gbif.org/terms/>
+PREFIX status: <https://rs.gbif.org/terms/status/>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dwc:    <http://rs.tdwg.org/dwc/terms/>
+SELECT ?name ?rank ?kingdomA ?kingdomB ?a ?b WHERE {
+  ?a rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kingdomA .
+  ?b rdfs:label ?name ; gbif:rank ?rank ; gbif:taxonomicStatus status:accepted ; dwc:kingdom ?kingdomB .
+  FILTER(STR(?a) < STR(?b))
+  FILTER(STR(?kingdomA) != STR(?kingdomB))
+  FILTER(STR(?kingdomA) != "incertae sedis" && STR(?kingdomB) != "incertae sedis")
+}""" ;
+    schema:keywords "example" ;
+    schema:target <https://qlever.dev/api/gbif> .
