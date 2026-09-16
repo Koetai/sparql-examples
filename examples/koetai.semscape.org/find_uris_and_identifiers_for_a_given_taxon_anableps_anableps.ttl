@@ -1,0 +1,40 @@
+@prefix ex: <https://koetai.semscape.org/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:find_uris_and_identifiers_for_a_given_taxon_anableps_anableps a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Find URIs and identifiers for a given taxon (Anableps anableps)" ;
+    rdfs:comment "This query start with searching for records and pages for a given taxon (as a string). Strings or literals can lead to expensive queries. This query example searches for known identifiers and URI in wikidata plus it searches for the English Wikipedia page. \n\nThe latter needs an interesting nested service call, because qlevers wikidata dumps is used for performance, however, this dump does not contain sitelinks, hence the need to federated further into Wikidata's native endpoint"^^rdf:HTML ;
+    spex:federatesWith <https://qlever.dev/api/wikidata> ;
+    spex:federatesWith <https://query.wikidata.org/sparql> ;
+    sh:select """PREFIX dwc: <http://rs.tdwg.org/dwc/terms/>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+    PREFIX wdtn: <http://www.wikidata.org/prop/direct-normalized/> 
+    PREFIX schema: <http://schema.org/>
+    SELECT * WHERE {
+      GRAPH <https://koetai.semscape.org/u/0000-0001-9773-4008/bhl/data> {
+        VALUES ?taxonLabel {"Anableps anableps"}
+        ?page dwc:scientificName ?taxonLabel ;
+              dcterms:isPartOf ?item ;
+              dcterms:date ?year .
+      }
+      SERVICE <https://qlever.dev/api/wikidata> {
+        ?wdTaxon wdt:P225 ?taxonLabel .
+         OPTIONAL {?wdTaxon wdt:P846 ?gbif . }
+         OPTIONAL {?wdTaxon wdt:P3151 ?iNaturalist .}
+         OPTIONAL {?wdTaxon wdt:P685 ?ncbiTaxonID ;
+                            wdtn:P685 ?ncbiTaxonURI .} 
+         OPTIONAL {?wdTaxon wdt:P2892 ?UMLS .}
+         SERVICE <https://query.wikidata.org/sparql> {
+              ?wikipediaEn schema:about ?wdTaxon ;
+                           schema:isPartOf <https://en.wikipedia.org/> .
+           }
+        }
+    }""" ;
+    schema:keywords "bhl wikidata identifiers uri" , "runtime:3967ms" ;
+    schema:target <https://koetai.semscape.org/u/0000-0001-9773-4008/bhl/sparql> .
