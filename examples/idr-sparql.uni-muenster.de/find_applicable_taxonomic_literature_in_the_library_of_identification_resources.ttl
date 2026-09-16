@@ -1,0 +1,66 @@
+@prefix ex: <https://sparql.loir.u.science.ru.nl/.well-known/sparql-examples/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix spex: <https://purl.expasy.org/sparql-examples/ontology#> .
+
+ex:find_applicable_taxonomic_literature_in_the_library_of_identification_resources a sh:SPARQLExecutable,
+        sh:SPARQLSelectExecutable ;
+    rdfs:label "Find applicable taxonomic literature in the Library of Identification Resources" ;
+    rdfs:comment "Get a checklist of species in a certain taxonomic group (Pentatomidae; gbifsp:9650) occurring in a certain country (Netherlands; NL), and then rank publications in the Library of Identification Resources based on what proportion of the species from the checklist are included."^^rdf:HTML ;
+    spex:federatesWith <https://qlever.dev/api/gbif> ;
+    sh:select """PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dwc: <http://rs.tdwg.org/dwc/terms/>
+PREFIX dwciri: <http://rs.tdwg.org/dwc/iri/>
+PREFIX gbifrank: <https://rs.gbif.org/terms/rank/>
+PREFIX gbifsp: <https://www.gbif.org/species/>
+PREFIX gbifterms: <https://rs.gbif.org/terms/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?resource ?title (YEAR(?date) AS ?year) ?pTax ?pObs WHERE {
+  {
+    SELECT
+      ?resource
+      (COUNT(?taxon)/?totalCount AS ?pTax)
+      (SUM(?amount)/?totalAmount AS ?pObs)
+    WHERE {
+      SERVICE <https://qlever.dev/api/gbif> {
+        # Get species of Pentatomidae (gbifsp:9650) occuring in the Netherlands ("NL") and their count
+        {
+          SELECT ?taxon ?scientificName (COUNT(?occurrence) AS ?amount) WHERE {
+            ?taxon skos:broader* gbifsp:9650 ;
+                  gbifterms:rank gbifrank:species ;
+                  dwc:scientificName ?scientificName .
+            ?occurrence dwc:countryCode "NL" ;
+                        dwciri:toTaxon ?taxon .
+          } GROUP BY ?taxon ?scientificName
+        }
+        # Repeat to get the count of species and total amount of occurrences
+        {
+          SELECT (COUNT(?taxon) AS ?totalCount) (SUM(?amount) AS ?totalAmount) WHERE {
+            {
+              SELECT ?taxon (COUNT(?occurrence) AS ?amount) WHERE {
+                ?taxon skos:broader* gbifsp:9650 ;
+                       gbifterms:rank gbifrank:species ;
+                       dwc:scientificName ?scientificName .
+                ?occurrence dwc:countryCode "NL" ;
+                            dwciri:toTaxon ?taxon .
+              } GROUP BY ?taxon
+            }
+          }
+        }
+      }
+
+      # Match with resource checklists
+      ?resource dcterms:subject/dwc:taxonID ?taxon .
+    } GROUP BY ?resource ?totalCount ?totalAmount
+  }
+
+  # Get additional metadata
+  ?work dcterms:hasPart ?resource ;
+        dcterms:title ?title ;
+        dcterms:issued ?date .
+} ORDER BY DESC(?pTax)""" ;
+    schema:keywords "taxonomy" , "identifcation keys" , "gbif" , "runtime:1856ms" ;
+    schema:target <https://sparql.loir.u.science.ru.nl/query> .
